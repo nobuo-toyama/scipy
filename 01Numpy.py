@@ -186,4 +186,114 @@ np.hsplit(a, 3)
 # Split a after the third and the fourth column
 np.hsplit(a, (3, 4))
 
-## ==== Copies and Views
+# ==== Copies and Views
+# Simple assignments make no copy of objects or their data.
+a = np.array([[0, 1, 2, 3],
+              [4, 5, 6, 7],
+              [8, 9, 10, 11]])
+b = a            # no new object is created
+b is a           # a and b are two names for the same ndarray object
+# Python passes mutable objects as references, so function calls make no copy.
+
+
+def f(x):
+    print(id(x))
+
+
+id(a)                           # id is a unique identifier of an object
+f(a)
+
+# ---- View or Shallow Copy
+c = a.view()
+c is a
+c.base is a
+c.flags.owndata
+c = c.reshape((2, 6))
+a.shape
+c[0, 4] = 1234
+a
+# Slicing an array returns a view of it:
+s = a[:, 1:3]
+s[:] = 10    # s[:] is a view of s. Note the difference between s = 10 and s[:] = 10
+a
+
+# ---- Deep Copy
+# The copy method makes a complete copy of the array and its data.
+d = a.copy()
+d is a
+d.base is a    # d doesn't share anything with a
+d[0, 0] = 9999
+a
+
+a = np.arange(int(1e8))
+b = a[:100].copy()
+del a    # the memory of ``a`` can be released.
+
+# ---- Functions and Methods Overview
+
+# ============================================
+#    Less Basic
+# ============================================
+
+# ==== Broadcasting rules
+
+# ============================================
+#    Advanced indexing and index tricks
+# ============================================
+
+# ==== Indexing with Arrays of Indices
+a = np.arange(12)**2    # the first 12 square numbers
+i = np.array([1, 1, 3, 8, 5])    # an array of indices
+a[i]    # the elements of a at the positions i
+
+j = np.array([[3, 4], [9, 7]])    # a bidimensional array of indices
+a[j]    # the same shape as j
+
+pallete = np.array([[0, 0, 0],    # black
+                    [255, 0, 0],    # red
+                    [0, 255, 0],    # green
+                    [0, 0, 255],    # blue
+                    [255, 255, 255]])    # white
+image = np.array([[0, 1, 2, 0],
+                 [0, 3, 4, 0]])    # each value corresponds to a color in the palette
+pallete[image]
+
+# We can also give indexes for more than one dimension.
+a = np.arange(12).reshape(3, 4)
+a
+i = np.array([[0, 1],
+              [1, 2]])    # indices for the first dim of a
+j = np.array([[2, 1],
+              [3, 3]])    # indices for the second dim
+a[i, j]    # i and j must have equal shape
+a[i, 2]
+a[:, j]
+
+l = (i, j)
+a[l]
+
+# Another common use of indexing with arrays is
+# the search of the maximum value of time-dependent series:
+time = np.linspace(20, 145, 5)    # time scale
+data = np.sin(np.arange(20)).reshape(5, 4)    # 4 time-dependent series
+time
+data
+
+# index of the maxima for each series
+ind = data.argmax(axis=0)
+ind
+
+# times corresponding to the maxima
+time_max = time[ind]
+data_max = data[ind, range(data.shape[1])]
+time_max
+data_max
+np.all(data_max == data.max(axis=0))
+
+# You can also use indexing with arrays as a target to assign to:
+a = np.arange(5)
+a
+a[[1, 3, 4]] = 0
+a
+
+# ==== Indexing with Boolean Arrays
