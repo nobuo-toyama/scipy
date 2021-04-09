@@ -297,3 +297,112 @@ a[[1, 3, 4]] = 0
 a
 
 # ==== Indexing with Boolean Arrays
+a = np.arange(12).reshape(3, 4)
+b = a > 4
+b
+a[b]    # 1d array with the selected elements
+a[b] = 0    # All elements of 'a' higher than 4 become 0
+a
+
+# You can look at the following example to see
+# how to use boolean indexing to generate an image of the Mandelbrot set:
+import numpy as np
+import matplotlib.pyplot as plt
+def mandelbrot(h, w, maxit=20):
+    """Returns an image of the Mandelbrot fractal of size (h,w)."""
+    y, x = np.ogrid[-1.4:1.4:h * 1j, -2:0.8:w * 1j]
+    c = x + y * 1j
+    z = c
+    divtime = maxit + np.zeros(z.shape, dtype=int)
+
+    for i in range(maxit):
+        z = z ** 2 + c
+        diverge = z * np.conj(z) > 2 ** 2  # who is diverging
+        div_now = diverge & (divtime == maxit)  # who is diverging now
+        divtime[div_now] = i  # note when
+        z[diverge] = 2  # avoid diverging too much
+
+    return divtime
+
+
+plt.imshow(mandelbrot(400,400))
+
+a = np.arange(12).reshape(3, 4)
+b1 = np.array([False, True, True])    # first dim selection
+b2 = np.array([True, False, True, False])    # second dim selection
+
+a[b1, :]    # selecting rows
+a[b1]    # same thing
+a[:, b2]    # selecting columns
+a[b1, b2]    # a weird thing to do
+
+# ==== The ix_() function
+a = np.array([2, 3, 4, 5])
+b = np.array([8, 5, 4])
+c = np.array([5, 4, 6, 8, 3])
+ax, bx, cx = np.ix_(a, b, c)
+ax
+bx
+cx
+ax.shape, bx.shape, cx.shape
+result = ax + bx * cx
+result
+result[3, 2, 4]
+a[3] + b[2] * c[4]
+# You could also implement the reduce as follows:
+def ufunc_reduce(ufct, *vectors):
+    vs = np.ix_(*vectors)
+    r = ufct.identity
+    for v in vs:
+        r = ufct(r, v)
+    return r
+
+
+ufunc_reduce(np.add, a, b, c)
+
+# ============================================
+#    Linear Algebra
+# ============================================
+# ==== Simple Array Operations
+a = np.array([[1.0, 2.0], [3.0, 4.0]])
+print(a)
+a.transpose()
+np.linalg.inv(a)
+u = np.eye(2)    # unit 2x2 matrix; "eye" represents "I"
+u
+j = np.array([[0.0, -1.0], [1.0, 0.0]])
+j @ j        # matrix product
+np.trace(u)  # trace
+y = np.array([[5.], [7.]])
+np.linalg.solve(a, y)
+np.linalg.eig(j)
+
+# ============================================
+#    Tricks and Tips
+# ============================================
+# ==== “Automatic” Reshaping
+a = np.arange(30)
+b = a.reshape((2, -1, 3))    # -1 means "whatever is needed"
+b.shape
+b
+
+# ---- Vector Stacking
+x = np.arange(0, 10, 2)
+y = np.arange(5)
+m = np.vstack([x,y])
+m
+xy = np.hstack([x, y])
+xy
+
+# ==== Histograms
+import numpy as np
+rg = np.random.default_rng(1)
+import matplotlib.pyplot as plt
+# Build a vector of 10000 normal deviates with variance 0.5^2 and mean 2
+mu, sigma = 2, 0.5
+v = rg.normal(mu,sigma,10000)
+# Plot a normalized histogram with 50 bins
+plt.hist(v, bins=50, density=1)       # matplotlib version (plot)
+# Compute the histogram with numpy and then plot
+(n, bins) = np.histogram(v, bins=50, density=True)  # NumPy version (no plot)
+plt.plot(.5*(bins[1:]+bins[:-1]), n)
