@@ -332,3 +332,13 @@ mgc_plot(x, y, "Linear", mgc_dict, only_mgc=True)
 
 # The same can be done for nonlinear data sets.
 np.random.seed(12345678)
+unif = np.array(np.random.uniform(0, 5, size=100))
+x = unif * np.cos(np.pi * unif)
+y = unif * np.sin(np.pi * unif) + 0.4 * np.random.random(x.size)
+mgc_plot(x, y, "Spiral", only_viz=True)
+
+# Now, we can see the test statistic, p-value, and MGC map visualized below.
+stat, pvalue, mgc_dict = multiscale_graphcorr(x, y)
+print("MGC test statistic: ", round(stat, 1))
+print("P-value: ", round(pvalue, 1))
+mgc_plot(x, y, "Spiral", mgc_dict, only_mgc=True)
