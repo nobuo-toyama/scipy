@@ -864,14 +864,6 @@ freq_slider = Slider(
 
 # Make a vertically oriented slider to control the amplitude
 axamp = plt.axes([0.1, 0.25, 0.0225, 0.63], facecolor=axcolor)
-amp_slider = Slider(
-    ax=axamp,
-    label="Amplitude",
-    valmin=0,
-    valmax=10,
-    valinit=init_amplitude,
-    orientation="vertical"
-)
 
 
 # The function to be called anytime a slider's value changes
@@ -893,5 +885,190 @@ def reset(event):
     freq_slider.reset()
     amp_slider.reset()
 button.on_clicked(reset)
+
+plt.show()
+
+# ==== Filled curves
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+def koch_snowflake(order, scale=10):
+    """
+    Return two lists x, y of point coordinates of the Koch snowflake.
+
+    Parameters
+    ----------
+    order : int
+        The recursion depth.
+    scale : float
+        The extent of the snowflake (edge length of the base triangle).
+    """
+    def _koch_snowflake_complex(order):
+        if order == 0:
+            # initial triangle
+            angles = np.array([0, 120, 240]) + 90
+            return scale / np.sqrt(3) * np.exp(np.deg2rad(angles) * 1j)
+        else:
+            ZR = 0.5 - 0.5j * np.sqrt(3) / 3
+
+            p1 = _koch_snowflake_complex(order - 1)  # start points
+            p2 = np.roll(p1, shift=-1)  # end points
+            dp = p2 - p1  # connection vectors
+
+            new_points = np.empty(len(p1) * 4, dtype=np.complex128)
+            new_points[::4] = p1
+            new_points[1::4] = p1 + dp / 3
+            new_points[2::4] = p1 + dp * ZR
+            new_points[3::4] = p1 + dp / 3 * 2
+            return new_points
+
+    points = _koch_snowflake_complex(order)
+    x, y = points.real, points.imag
+    return x, y
+
+
+# Basic usage:
+x, y = koch_snowflake(order=5)
+
+plt.figure(figsize=(8, 8))
+plt.axis('equal')
+plt.fill(x, y)
+plt.show()
+
+# Use keyword arguments facecolor and edgecolor to modify the the colors of the polygon.
+# Since the linewidth of the edge is 0 in the default Matplotlib style,
+# we have to set it as well for the edge to become visible.
+x, y = koch_snowflake(order=2)
+
+fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(9, 3),
+                                    subplot_kw={'aspect': 'equal'})
+ax1.fill(x, y)
+ax2.fill(x, y, facecolor='lightsalmon', edgecolor='orangered', linewidth=3)
+ax3.fill(x, y, facecolor='none', edgecolor='purple', linewidth=3)
+
+plt.show()
+
+# ==== Date handling
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import matplotlib.cbook as cbook
+
+# Load a numpy structured array from yahoo csv data with fields date, open,
+# close, volume, adj_close from the mpl-data/example directory.  This array
+# stores the date as an np.datetime64 with a day unit ('D') in the 'date'
+# column.
+data = cbook.get_sample_data('goog.npz', np_load=True)['price_data']
+
+fig, ax = plt.subplots()
+ax.plot('date', 'adj_close', data=data)
+
+# Major ticks every 6 months.
+fmt_half_year = mdates.MonthLocator(interval=6)
+ax.xaxis.set_major_locator(fmt_half_year)
+
+# Minor ticks every month.
+fmt_month = mdates.MonthLocator()
+ax.xaxis.set_minor_locator(fmt_month)
+
+# Text in the x axis will be displayed in 'YYYY-mm' format.
+ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y-%m'))
+
+# Round to nearest years.
+datemin = np.datetime64(data['date'][0], 'Y')
+datemax = np.datetime64(data['date'][-1], 'Y') + np.timedelta64(1, 'Y')
+ax.set_xlim(datemin, datemax)
+
+# Format the coords message box, i.e. the numbers displayed as the cursor moves
+# across the axes within the interactive GUI.
+ax.format_xdata = mdates.DateFormatter('%Y-%m')
+ax.format_ydata = lambda x: f'${x:.2f}'  # Format the price.
+ax.grid(True)
+
+# Rotates and right aligns the x labels, and moves the bottom of the
+# axes up to make room for them.
+fig.autofmt_xdate()
+
+plt.show()
+
+# ==== Log plots
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Data for plotting
+t = np.arange(0.01, 20.0, 0.01)
+
+# Create figure
+fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
+
+# log y axis
+ax1.semilogy(t, np.exp(-t / 5.0))
+ax1.set(title='semilogy')
+ax1.grid()
+
+# log x axis
+ax2.semilogx(t, np.sin(2 * np.pi * t))
+ax2.set(title='semilogx')
+ax2.grid()
+
+# log x and y axis
+ax3.loglog(t, 20 * np.exp(-t / 10.0))
+ax3.set_xscale('log', base=2)
+ax3.set(title='loglog base 2 on x')
+ax3.grid()
+
+# With errorbars: clip non-positive values
+# Use new data for plotting
+x = 10.0**np.linspace(0.0, 2.0, 20)
+y = x**2.0
+
+ax4.set_xscale("log", nonpositive='clip')
+ax4.set_yscale("log", nonpositive='clip')
+ax4.set(title='Errorbars go negative')
+ax4.errorbar(x, y, xerr=0.1 * x, yerr=5.0 + 0.75 * y)
+# ylim must be set after errorbar to allow errorbar to autoscale limits
+ax4.set_ylim(bottom=0.1)
+
+fig.tight_layout()
+plt.show()
+
+# ==== Polar plots
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+r = np.arange(0, 2, 0.01)
+theta = 2 * np.pi * r
+
+fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
+ax.plot(theta, r)
+ax.set_rmax(2)
+ax.set_rticks([0.5, 1, 1.5, 2])  # Less radial ticks
+ax.set_rlabel_position(-22.5)  # Move radial labels away from plotted line
+ax.grid(True)
+
+ax.set_title("A line plot on a polar axis", va='bottom')
+plt.show()
+
+# ==== Legends
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Make some fake data.
+a = b = np.arange(0, 3, .02)
+c = np.exp(a)
+d = c[::-1]
+
+# Create plots with pre-defined labels.
+fig, ax = plt.subplots()
+ax.plot(a, c, 'k--', label='Model length')
+ax.plot(a, d, 'k:', label='Data length')
+ax.plot(a, c + d, 'k', label='Total message length')
+
+legend = ax.legend(loc='upper center', shadow=True, fontsize='x-large')
+
+# Put a nicer background color on the legend.
+legend.get_frame().set_facecolor('C0')
 
 plt.show()
