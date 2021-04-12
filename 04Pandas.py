@@ -103,7 +103,6 @@ morning.sort_values(by=["High", "Low"], ascending=False).head()
 evening = pd.read_csv("Evening.csv")
 evening.head()
 
-air_quality = pd.merge(air_quality, stations_coord, how="left", on="location")
 blood_pressure = pd.merge(morning, evening, how="left", on="Date")
 blood_pressure.head()
 
